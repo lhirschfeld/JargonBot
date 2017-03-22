@@ -7,6 +7,8 @@ Running this script requires the following prerequisites:
  * [XMLtodict](https://github.com/martinblech/xmltodict)
 
 ### Instructions
-The aim of this bot is to automatically define difficult words for users on [Reddit](www.redditcom). Definitions are gathered from [Merriam Webster](https://www.merriam-webster.com/).
+The aim of this bot is to automatically define difficult words for users on
+ [Reddit](www.redditcom). Definitions are gathered from 
+ [Merriam Webster](https://www.merriam-webster.com/).
 
 This bot will post definitions on the following subreddits:
