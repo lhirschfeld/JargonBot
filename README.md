@@ -8,7 +8,8 @@ Running this script requires the following prerequisites:
 
 ### Instructions
 The aim of this bot is to automatically define difficult words for users on
- [Reddit](www.redditcom). Definitions are gathered from 
- [Merriam Webster](https://www.merriam-webster.com/).
+ [Reddit](www.redditcom). Definitions are gathered from
+ [The Oxford English Dictionary](http://www.oed.com/).
 
 This bot will post definitions on the following subreddits:
+  * [Test](https://www.reddit.com/r/test)

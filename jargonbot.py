@@ -19,6 +19,9 @@ with open('ids.pickle', 'rb') as handle:
     ids = pickle.load(handle)
 with open('languages.pickle', 'rb') as handle:
     languages = pickle.load(handle)
+with open('count.txt', 'r') as handle:
+    count = [line.split()[0] for line in handle.readlines()]
+    topWords = count[:80000]
 
 # -- Methods --
 
@@ -33,38 +36,54 @@ def searchReddit(lim, rate, subs):
 
 # Search a sub for words that need to be defined, and define them.
 def searchSub(sub, lim):
+    if sub not in languages:
+        analyze(sub)
+
     subreddit = r.subreddit(sub)
-    subWords = [pair[0] for pair in languages[sub].most_common(5000)]
+    subWords = [pair[0] for pair in languages[sub].most_common(10000)]
     for submission in subreddit.hot(limit=lim):
         comment_queue = submission.comments[:]
         while comment_queue:
             com = comment_queue.pop(0)
             if not hasattr(com, 'body') or com.id in ids:
                 continue
-            for word in com.body:
+            for word in com.body.split():
                 # Stem the word and check if it is rare enough to be defined.
+                # Find the most similar word in count to the stemmed word.
                 word = stemmer.stem(word)
                 if word not in subWords:
-                    reply(com, word)
-                    break
+                    for item in count:
+                        if item.find(word) == 0:
+                            word = item
+                            break
+                    if word not in topWords:
+                        reply(com, word)
+                        break
             ids.append(com.id)
             comment_queue.extend(com.replies)
 
 # Reply to a comment with a word definition.
 def reply(com, word):
-    print("Found Comment:" + com.id)
+    print("Found Comment:" + com.id + ", " + word)
     reply = ""
     # Get the definition of the word (if it exists)
-    if True: # Do this if the word has a found definition
+    result = getDefinition(word)
+
+    if result != None:
+        # A definition has been found.
+        reply += "Definition of " + word.upper() + ": " + result[0].capitalize() + ".\n\n"
+        reply += "*" + result[1].capitalize() + ".*"
         reply += "\n\n---------\n\n"
-    if reply != "":
-        reply += " ^All ^data ^from ^merriam-webster.com. ^I ^am ^a ^bot."
+        reply += " ^All ^data ^from ^http://www.oed.com/. ^I ^am ^a ^bot."
         reply += " ^Please ^contact ^/u/liortulip"
         reply += " ^with ^any ^questions ^or ^concerns."
         try:
             com.reply(reply)
         except praw.exceptions.APIException as error:
             print("Hit rate limit error.")
+            ids.append(com.id)
+            with open('ids.pickle', 'wb') as handle:
+                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
             sleep(600)
             com.reply(reply)
         print("Replied")
@@ -76,7 +95,7 @@ def analyze(sub):
     print("Analyzing:", sub)
     subreddit = r.subreddit(sub)
     words = Counter()
-    for submission in subreddit.hot(2000):
+    for submission in subreddit.hot(limit=300):
         comment_queue = submission.comments[:]
         while comment_queue:
             com = comment_queue.pop(0)
@@ -85,7 +104,6 @@ def analyze(sub):
                     # Stem the word and add it to the counter.
                     word = stemmer.stem(word)
                     words[word] += 1
-    words = Counter(words)
     languages[sub] = words
     with open('languages.pickle', 'wb') as handle:
         pickle.dump(languages, handle, protocol=pickle.HIGHEST_PROTOCOL)
