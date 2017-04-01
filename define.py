@@ -4,8 +4,12 @@ import json
 def getDefinition(word):
     with open('words.txt', 'r') as handle:
         words = [line[:-1] for line in handle.readlines()]
-        # print(words)
 
+    # Grab Credentials
+    with open('oedcreds.txt', 'r') as handle:
+        app_id = handle.readline()
+        app_key = handle.readline()
+        
     # If this is not a word (perhaps a typo) do not attempt to define it.
     if word not in words:
         print("not showing up in words.txt")
@@ -14,8 +18,8 @@ def getDefinition(word):
     # Authentication information.
     headers = {
        "Accept": "application/json",
-       "app_id": "d2cb3d21",
-       "app_key": "a650f5f0a9a3da35157df5ab7d89d603"
+       "app_id": app_id,
+       "app_key": app_key
     }
     r = requests.get('https://od-api.oxforddictionaries.com:443/api/v1/' +
                      'entries/en/' + word, headers=headers)

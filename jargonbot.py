@@ -5,37 +5,45 @@
 import re
 import pickle
 import praw
+import random
 
 from time import sleep
 from define import getDefinition
 from collections import Counter
 from nltk.stem import *
 
-# -- Setup Global Variables --
-r = praw.Reddit('bot3')
-stemmer = PorterStemmer()
-
-with open('ids.pickle', 'rb') as handle:
-    ids = pickle.load(handle)
-with open('languages.pickle', 'rb') as handle:
-    languages = pickle.load(handle)
-with open('count.txt', 'r') as handle:
-    count = [line.split()[0] for line in handle.readlines()]
-    topWords = count[:80000]
-
 # -- Methods --
+def jargon(lim, rate, subs, machineLearning=False):
+    # -- Setup Variables --
+    r = praw.Reddit('bot3')
+    stemmer = PorterStemmer()
+    ml = machineLearning
 
+    with open('ids.pickle', 'rb') as handle:
+        ids = pickle.load(handle)
+    with open('languages.pickle', 'rb') as handle:
+        languages = pickle.load(handle)
+    with open('count.txt', 'r') as handle:
+        count = [line.split()[0] for line in handle.readlines()]
+
+    if ml:
+        responses = []
+        # Model Takes: [Word Popularity, Word Length, Comment Length]
+        with open('model.pickle', 'rb') as handle:
+            model = pickle.load(handle)
+
+    searchReddit(lim, rate, subs, ml)
 # Search Reddit for words that need to be defined, and define them.
-def searchReddit(lim, rate, subs):
+def searchReddit(lim, rate, subs, ml):
     while True:
         for sub in subs:
-            searchSub(sub, lim)
+            searchSub(sub, lim, ml)
         with open('ids.pickle', 'wb') as handle:
             pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
         sleep(rate)
 
 # Search a sub for words that need to be defined, and define them.
-def searchSub(sub, lim):
+def searchSub(sub, lim, ml):
     if sub not in languages:
         analyze(sub)
 
@@ -56,14 +64,30 @@ def searchSub(sub, lim):
                         if item.find(word) == 0:
                             word = item
                             break
-                    if word not in topWords:
-                        reply(com, word)
+                    if ml:
+                        # If ML, after basic checks, predict using the model
+                        # to decide whether to reply.
+                        popularity = count.find(word)
+                        if popularity = -1:
+                            popularity = 1000000
+                        info = [popularity, len(word), len(com.body)]
+
+                        if popularity > 10000:
+                            # Sometimes, randomly reply to train the model.
+                            if random.random() < .0001:
+                                reply(com, word, info)
+                            model.predict(info) > 0:
+                            reply(com, word, info, ml)
                         break
+                    else:
+                        if word not in count[:80000]:
+                            reply(com, word)
+                            break
             ids.append(com.id)
             comment_queue.extend(com.replies)
 
 # Reply to a comment with a word definition.
-def reply(com, word):
+def reply(com, word, info=None, ml):
     print("Found Comment:" + com.id + ", " + word)
     reply = ""
     # Get the definition of the word (if it exists)
@@ -79,13 +103,14 @@ def reply(com, word):
         reply += " ^with ^any ^questions ^or ^concerns."
         try:
             com.reply(reply)
+
+            if ml:
+                responses[com.id] = info
         except praw.exceptions.APIException as error:
             print("Hit rate limit error.")
-            ids.append(com.id)
             with open('ids.pickle', 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
             sleep(600)
-            com.reply(reply)
         print("Replied")
     else:
         print("False Reply ^")
@@ -109,4 +134,4 @@ def analyze(sub):
         pickle.dump(languages, handle, protocol=pickle.HIGHEST_PROTOCOL)
     print("Analyzation complete.")
 
-searchReddit(50, 10, ["test"])
+jargon(50, 10, ["test"])
