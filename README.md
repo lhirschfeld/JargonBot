@@ -3,7 +3,6 @@
 Running this script requires the following prerequisites:
  * [Python](https://www.python.org/) 3.0+
  * [PRAW](https://praw.readthedocs.org/en/latest/)
- * [OAuth2Util](https://github.com/SmBe19/praw-OAuth2Util)
  * [XMLtodict](https://github.com/martinblech/xmltodict)
 
 ### Instructions
