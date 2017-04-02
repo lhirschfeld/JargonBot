@@ -25,6 +25,7 @@ def jargon(lim, rate, subs, machineLearning=False):
         languages = pickle.load(handle)
     with open('count.txt', 'r') as handle:
         count = [line.split()[0] for line in handle.readlines()]
+        countStemmed = [stemmer.stem(word) for word in count]
 
     if ml:
         responses = []
@@ -33,6 +34,7 @@ def jargon(lim, rate, subs, machineLearning=False):
             model = pickle.load(handle)
 
     searchReddit(lim, rate, subs, ml)
+
 # Search Reddit for words that need to be defined, and define them.
 def searchReddit(lim, rate, subs, ml):
     while True:
@@ -60,8 +62,8 @@ def searchSub(sub, lim, ml):
                 # Find the most similar word in count to the stemmed word.
                 word = stemmer.stem(word)
                 if word not in subWords:
-                    for item in count:
-                        if item.find(word) == 0:
+                    for item in countStemmed:
+                        if item == word:
                             word = item
                             break
                     if ml:
