@@ -7,9 +7,9 @@ def getDefinition(word):
 
     # Grab Credentials
     with open('oedcreds.txt', 'r') as handle:
-        app_id = handle.readline()
-        app_key = handle.readline()
-        
+        app_id = handle.readline()[:-1]
+        app_key = handle.readline()[:-1]
+
     # If this is not a word (perhaps a typo) do not attempt to define it.
     if word not in words:
         print("not showing up in words.txt")
