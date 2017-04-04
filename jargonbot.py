@@ -148,7 +148,7 @@ def reply(com, word, ml, info=None):
 
     if result != None:
         # A definition has been found.
-        reply += """Definition of {}: {}.\n\n*{}.*""".format(word.upper(), result[0].capitalize(),
+        reply += """Definition of **{}**: {}.\n\n>*{}.*""".format(word.lower(), result[0].capitalize(),
                                     result[1].capitalize())
         if ml:
             reply += """\n\n---------\n\nI am a bot which attempts to define difficult words automatically. I use machine learning to do this, and I can use your feedback to improve. Feel free to leave a comment to let me know what you thought of this definition!
