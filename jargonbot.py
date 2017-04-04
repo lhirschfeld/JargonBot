@@ -14,12 +14,11 @@ from collections import Counter
 from nltk.stem import *
 from textblob import TextBlob
 from sklearn import linear_model
+
 # -- Setup Variables --
 r = praw.Reddit('bot3')
 stemmer = PorterStemmer()
 responses = []
-
-RANDOMRATE = 0.5
 
 with open('ids.pickle', 'rb') as handle:
     ids = pickle.load(handle)
@@ -30,6 +29,8 @@ with open('count.txt', 'r') as handle:
     countStemmed = [stemmer.stem(word) for word in count]
 
 # Model Takes: [Word Popularity, Word Length, Comment Length]
+# Models is a dictionary with a touple at each key containing:
+# (linear regression, randomness rate)
 with open('models.pickle', 'rb') as handle:
     try:
         models = pickle.load(handle)
@@ -73,10 +74,13 @@ def updateModels():
             com = comment_queue.pop(0)
             text = TextBlob(com.text)
             result += text.sentiment.polarity * com.score
-        models[r["sub"]].fit([[r["popularity"], r["wLength"], r["cLength"]]],
+        models[r["sub"]][0].fit([[r["popularity"], r["wLength"], r["cLength"]]],
                               [result])
-        with open('models.pickle', 'wb') as handle:
-            pickle.dump(models, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        # Update odds of random choice
+        models[r]["sub"][1] *= 0.96
+    with open('models.pickle', 'wb') as handle:
+        pickle.dump(models, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Search a sub for words that need to be defined, and define them.
 def searchSub(sub, lim, ml):
@@ -103,8 +107,8 @@ def searchSub(sub, lim, ml):
                             break
                     if ml:
                         if sub not in models:
-                            models[sub] = linear_model.LinearRegression()
-                            models[sub].fit([[1000000, 10, 10]], [10])
+                            models[sub] = (linear_model.LinearRegression(), 1)
+                            models[sub][0].fit([[1000000, 10, 10]], [10])
                         # If ML, after basic checks, predict using the model
                         # to decide whether to reply.
                         if word in count:
@@ -118,9 +122,9 @@ def searchSub(sub, lim, ml):
 
                         if popularity > 10000:
                             # Sometimes, randomly reply to train the model.
-                            if random.random() < RANDOMRATE:
+                            if random.random() < models[sub][1]:
                                 reply(com, word, ml, info=info)
-                            elif models[sub].predict([[info["popularity"],
+                            elif models[sub][0].predict([[info["popularity"],
                                     info["wLength"], info["cLength"]]]) > 0:
                                 reply(com, word, ml, info=info)
                         break
