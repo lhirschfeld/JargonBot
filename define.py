@@ -31,5 +31,8 @@ def getDefinition(word):
     data = json.loads(r.text)
     data = data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]
     definition = data["definitions"][0]
-    example = data["examples"][0]["text"]
+    try:
+        example = data["examples"][0]["text"]
+    except KeyError:
+        example = ""
     return (definition, example)
