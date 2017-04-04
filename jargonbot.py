@@ -16,7 +16,7 @@ from textblob import TextBlob
 from sklearn import linear_model
 
 # -- Setup Variables --
-r = praw.Reddit('bot3')
+r = praw.Reddit('jargonBot')
 stemmer = PorterStemmer()
 responses = []
 
