@@ -21,7 +21,10 @@ stemmer = PorterStemmer()
 responses = []
 
 with open('ids.pickle', 'rb') as handle:
-    ids = pickle.load(handle)
+    try:
+        ids = pickle.load(handle)
+    except EOFError:
+        ids = []
 with open('languages.pickle', 'rb') as handle:
     languages = pickle.load(handle)
 with open('count.txt', 'r') as handle:
