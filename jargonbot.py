@@ -4,42 +4,25 @@
 # -- Imports --
 import re
 import pickle
-import praw
 import random
+import praw
 
-from datetime import datetime
+from custombot import RedditBot
 from time import sleep
 from define import getDefinition
 from collections import Counter
 from nltk.stem import *
-from textblob import TextBlob
 from sklearn import linear_model
 
 # -- Setup Variables --
-r = praw.Reddit('jargonBot')
+jargonBot = RedditBot('jargonBot')
 stemmer = PorterStemmer()
-responses = []
 
-with open('ids.pickle', 'rb') as handle:
-    try:
-        ids = pickle.load(handle)
-    except EOFError:
-        ids = []
-with open('languages.pickle', 'rb') as handle:
-    languages = pickle.load(handle)
 with open('count.txt', 'r') as handle:
     count = [line.split()[0] for line in handle.readlines()]
     countStemmed = [stemmer.stem(word) for word in count]
-
-# Model Takes: [Word Popularity, Word Length, Comment Length]
-# Models is a dictionary with a touple at each key containing:
-# (linear regression, randomness rate)
-with open('models.pickle', 'rb') as handle:
-    try:
-        models = pickle.load(handle)
-    except EOFError:
-        models = {}
-
+with open('languages.pickle', 'rb') as handle:
+    languages = pickle.load(handle)
 # -- Methods --
 def jargon(lim, rate, subs, ml=False):
     searchReddit(lim, rate, subs, ml)
@@ -49,55 +32,23 @@ def searchReddit(lim, rate, subs, ml):
     while True:
         for sub in subs:
             searchSub(sub, lim, ml)
-        with open('ids.pickle', 'wb') as handle:
-            pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
+        jargonBot.updateIds()
         if ml:
-            updateModels()
+            jargonBot.updateModels(["popularity", "wLength", "cLength"])
         sleep(rate)
-
-# Update the machine learning model and save it.
-def updateModels():
-    global responses, models
-    currentTime = datetime.now()
-    oldResponses = [(currentTime - r["time"]).total_seconds() > 3600
-                             for r in responses]
-    responses = [(currentTime - r["time"]).total_seconds() < 3600
-                             for r in responses]
-    for r in oldResponses:
-        result = 0
-        url = "https://reddit.com/" + r["sID"] + "?comment=" + r["cID"]
-        submission = reddit.get_submission(url=url)
-        comment_queue = submission.comments[:]
-        if comment_queue:
-            com = comment_queue.pop(0)
-            result += com.score
-            comment_queue.extend(com.replies)
-        while comment_queue:
-            com = comment_queue.pop(0)
-            text = TextBlob(com.text)
-            result += text.sentiment.polarity * com.score
-        models[r["sub"]][0].fit([[r["popularity"], r["wLength"], r["cLength"]]],
-                              [result])
-
-        # Update odds of random choice
-        models[r]["sub"][1] *= 0.96
-    with open('models.pickle', 'wb') as handle:
-        pickle.dump(models, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Search a sub for words that need to be defined, and define them.
 def searchSub(sub, lim, ml):
-    global models
     if sub not in languages:
         analyze(sub)
 
-    subreddit = r.subreddit(sub)
+    subreddit = jargonBot.r.subreddit(sub)
     subWords = [pair[0] for pair in languages[sub].most_common(10000)]
     for submission in subreddit.hot(limit=lim):
         comment_queue = submission.comments[:]
         while comment_queue:
             com = comment_queue.pop(0)
-            if not hasattr(com, 'body') or com.id in ids:
+            if not hasattr(com, 'body') or com.id in jargonBot.ids:
                 continue
             for word in com.body.split():
                 # Stem the word and check if it is rare enough to be defined.
@@ -109,9 +60,10 @@ def searchSub(sub, lim, ml):
                             word = item
                             break
                     if ml:
-                        if sub not in models:
-                            models[sub] = (linear_model.LinearRegression(), 1)
-                            models[sub][0].fit([[1000000, 10, 10]], [10])
+                        if sub not in jargonBot.models:
+                            jargonBot.models[sub] = (linear_model.LinearRegression(), 1)
+                            jargonBot.models[sub][0].fit([[1000000, 10, 10]], [10])
+
                         # If ML, after basic checks, predict using the model
                         # to decide whether to reply.
                         if word in count:
@@ -125,9 +77,9 @@ def searchSub(sub, lim, ml):
 
                         if popularity > 10000:
                             # Sometimes, randomly reply to train the model.
-                            if random.random() < models[sub][1]:
+                            if random.random() < jargonBot.models[sub][1]:
                                 reply(com, word, ml, info=info)
-                            elif models[sub][0].predict([[info["popularity"],
+                            elif jargonBot.models[sub][0].predict([[info["popularity"],
                                     info["wLength"], info["cLength"]]]) > 0:
                                 reply(com, word, ml, info=info)
                         break
@@ -135,12 +87,11 @@ def searchSub(sub, lim, ml):
                         if word not in count[:80000]:
                             reply(com, word, ml)
                             break
-            ids.append(com.id)
+            jargonBot.ids.append(com.id)
             comment_queue.extend(com.replies)
 
 # Reply to a comment with a word definition.
 def reply(com, word, ml, info=None):
-    global responses
     print("Found Comment:" + com.id)
     reply = ""
     # Get the definition of the word (if it exists)
@@ -161,12 +112,11 @@ def reply(com, word, ml, info=None):
             if ml:
                 info["time"] = datetime.now()
                 info["cID"] = cID
-                responses.append(info)
+                jargonBot.responses.append(info)
             print("Replied")
         except praw.exceptions.APIException as error:
             print("Hit rate limit error.")
-            with open('ids.pickle', 'wb') as handle:
-                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            repostBot.updateIds()
             sleep(600)
     else:
         print("False Reply ^")
@@ -174,7 +124,7 @@ def reply(com, word, ml, info=None):
 # Analyze the language of a particular sub.
 def analyze(sub):
     print("Analyzing:", sub)
-    subreddit = r.subreddit(sub)
+    subreddit = jargonBot.r.subreddit(sub)
     words = Counter()
     for submission in subreddit.hot(limit=300):
         comment_queue = submission.comments[:]
