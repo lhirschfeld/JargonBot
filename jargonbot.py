@@ -61,8 +61,7 @@ def searchSub(sub, lim, ml):
                             break
                     if ml:
                         if sub not in jargonBot.models:
-                            jargonBot.models[sub] = (linear_model.LinearRegression(), 1)
-                            jargonBot.models[sub][0].fit([[1000000, 10, 10]], [10])
+                            jargonBot.createModel(sub, ([[1000000, 10, 10]], [10]))
 
                         # If ML, after basic checks, predict using the model
                         # to decide whether to reply.
