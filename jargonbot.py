@@ -114,7 +114,7 @@ def reply(com, word, ml, info=None):
             print("Replied")
         except praw.exceptions.APIException as error:
             print("Hit rate limit error.")
-            repostBot.updateIds()
+            jargonBot.updateIds()
             sleep(600)
 
 # Analyze the language of a particular sub.
