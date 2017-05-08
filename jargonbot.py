@@ -29,7 +29,6 @@ def jargon(lim, rate, subs, ml=False):
 
 # Search Reddit for words that need to be defined, and define them.
 def searchReddit(lim, rate, subs, ml):
-    while True:
         for sub in subs:
             searchSub(sub, lim, ml)
         jargonBot.updateIds()
@@ -139,4 +138,8 @@ def analyze(sub):
         pickle.dump(languages, handle, protocol=pickle.HIGHEST_PROTOCOL)
     print("Analyzation complete.")
 
-jargon(50, 10, ["test"], ml=True)
+while True:
+    for i in range(10):
+        jargon(50, 10, ["science", "math", "askreddit"])
+    for i in range(10):
+        jargon(50, 10, ["science", "math", "askreddit"], ml=True)
