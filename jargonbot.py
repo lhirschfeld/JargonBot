@@ -96,8 +96,12 @@ def reply(com, word, ml, info=None):
 
     if result != None:
         # A definition has been found.
-        reply += """Definition of **{}**: {}.\n\n>*{}.*""".format(word.lower(), result[0].capitalize(),
-                                    result[1].capitalize())
+        if result[1] != "":
+            reply += """Definition of **{}**: {}.\n\n>*{}.*""".format(word.lower(), result[0].capitalize(),
+                                        result[1].capitalize())
+        else:
+            reply += """Definition of **{}**: {}.""".format(word.lower(), result[0].capitalize())
+
         if ml:
             reply += """\n\nI am a bot which attempts to define difficult words automatically. I use machine learning to do this, and I can use your feedback to improve. Feel free to leave a comment to let me know what you thought of this definition!"""
         reply += "\n\n---------\n\n^Check ^out ^my ^[code](https://github.com/lhirschfeld/JargonBot). "
