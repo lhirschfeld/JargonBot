@@ -82,7 +82,7 @@ def searchSub(sub, lim, ml):
                                 reply(com, word, ml, info=info)
                         break
                     else:
-                        if word not in count[:200000]:
+                        if word not in count[:400000]:
                             reply(com, word, ml)
                             break
             jargonBot.ids.append(com.id)
