@@ -12,7 +12,6 @@ def getDefinition(word):
 
     # If this is not a word (perhaps a typo) do not attempt to define it.
     if word not in words:
-        print("not showing up in words.txt")
         return None
 
     # Authentication information.
@@ -29,7 +28,10 @@ def getDefinition(word):
         return None
     # Parse the data to obtain the word's definition and other useful info.
     data = json.loads(r.text)
-    data = data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]
+    try:
+        data = data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]
+    except KeyError:
+        return None
     definition = data["definitions"][0]
     try:
         example = data["examples"][0]["text"]
