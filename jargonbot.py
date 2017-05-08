@@ -100,9 +100,10 @@ def reply(com, word, ml, info=None):
         reply += """Definition of **{}**: {}.\n\n>*{}.*""".format(word.lower(), result[0].capitalize(),
                                     result[1].capitalize())
         if ml:
-            reply += """\n\n---------\n\nI am a bot which attempts to define difficult words automatically. I use machine learning to do this, and I can use your feedback to improve. Feel free to leave a comment to let me know what you thought of this definition!
-                    """
-        reply += """\n\nAll data from http://www.oed.com/. Please contact /u/liortulip with any questions or concerns."""
+            reply += """\n\nI am a bot which attempts to define difficult words automatically. I use machine learning to do this, and I can use your feedback to improve. Feel free to leave a comment to let me know what you thought of this definition!"""
+        reply += "\n\n---------\n\n^Check ^out ^my ^[code](https://github.com/lhirschfeld/JargonBot). "
+        reply += " ^Please ^contact ^/u/liortulip ^with"
+        reply += " ^any ^questions ^or ^concerns."
 
         try:
             cID = com.reply(reply)
