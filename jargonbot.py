@@ -60,7 +60,7 @@ def searchSub(sub, lim, ml):
                             break
                     if ml:
                         if sub not in jargonBot.models:
-                            jargonBot.createModel(sub, ([[1000000, 10, 10]], [10]))
+                            jargonBot.createModel(sub, [[[1000000, 10, 10]], [10]])
 
                         # If ML, after basic checks, predict using the model
                         # to decide whether to reply.
@@ -143,3 +143,4 @@ def analyze(sub):
 while True:
     jargon(50, 10, ["science", "math", "askreddit"])
     jargon(50, 10, ["science", "math", "askreddit"], ml=True)
+    print("Completed loop")
