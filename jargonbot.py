@@ -82,7 +82,7 @@ def searchSub(sub, lim, ml):
                                 reply(com, word, ml, info=info)
                         break
                     else:
-                        if word not in count[:80000]:
+                        if word not in count[:200000]:
                             reply(com, word, ml)
                             break
             jargonBot.ids.append(com.id)
@@ -137,7 +137,5 @@ def analyze(sub):
     print("Analyzation complete.")
 
 while True:
-    for i in range(10):
-        jargon(50, 10, ["science", "math", "askreddit"])
-    for i in range(10):
-        jargon(50, 10, ["science", "math", "askreddit"], ml=True)
+    jargon(50, 10, ["science", "math", "askreddit"])
+    jargon(50, 10, ["science", "math", "askreddit"], ml=True)
