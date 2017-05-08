@@ -90,7 +90,6 @@ def searchSub(sub, lim, ml):
 
 # Reply to a comment with a word definition.
 def reply(com, word, ml, info=None):
-    print("Found Comment:" + com.id)
     reply = ""
     # Get the definition of the word (if it exists)
     result = getDefinition(word)
@@ -117,8 +116,6 @@ def reply(com, word, ml, info=None):
             print("Hit rate limit error.")
             repostBot.updateIds()
             sleep(600)
-    else:
-        print("False Reply ^")
 
 # Analyze the language of a particular sub.
 def analyze(sub):
