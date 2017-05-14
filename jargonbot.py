@@ -53,6 +53,8 @@ def searchSub(sub, lim, ml):
                 # Stem the word and check if it is rare enough to be defined.
                 # Find the most similar word in count to the stemmed word.
                 word = stemmer.stem(word)
+                if "'" in word:
+                    continue
                 if word not in subWords:
                     for item in countStemmed:
                         if item == word:

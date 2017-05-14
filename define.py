@@ -1,5 +1,7 @@
 import requests
 import json
+# from simplejson import JSONDecodeError
+from json.decoder import JSONDecodeError
 
 def getDefinition(word):
     with open('words.txt', 'r') as handle:
