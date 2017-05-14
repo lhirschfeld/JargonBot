@@ -27,12 +27,14 @@ def getDefinition(word):
     if r.status_code == 404:
         return None
     # Parse the data to obtain the word's definition and other useful info.
-    data = json.loads(r.text)
     try:
+        data = json.loads(r.text)
         data = data["results"][0]["lexicalEntries"][0]["entries"][0]["senses"][0]
+        definition = data["definitions"][0]
     except KeyError:
         return None
-    definition = data["definitions"][0]
+    except JSONDecodeError:
+        return None
     try:
         example = data["examples"][0]["text"]
     except KeyError:
